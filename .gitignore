@@ -1,0 +1,32 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment variables
+*.env
+BACKEND/.env
+FRONTEND/.env
+
+# Build output
+FRONTEND/build/
+FRONTEND/dist/
+FRONTEND/public/
+
+# Logs
+logs/
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+
+# Miscellaneous
+coverage/
+*.tgz
+*.zip
