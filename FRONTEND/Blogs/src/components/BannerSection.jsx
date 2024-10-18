@@ -8,10 +8,10 @@ function BannerSection() {
 
       <div className="mt-12 top-container w-full flex justify-center items-center">
         <div
-          href="/"
-          className="m-6 p-12 flex flex-col items-center bg-white border border-gray-200 rounded-lg shadow md:flex-row md:max-w-2xl  dark:border-gray-700 dark:bg-gray-800 "
+          className=" p-1 flex flex-col items-center bg-white border border-gray-200 rounded-lg shadow md:flex-row md:max-w-2xl  dark:border-gray-700 dark:bg-gray-800 "
         >
-          <div className="flex flex-col justify-between p-6 leading-normal">
+          <div className="flex flex-col items-center justify-between p-6 leading-normal">
+          <img src="/logo.jpg" alt="Blogify logo" className="96 w-96" />
             <h5 className="mb-3 text-3xl font-bold tracking-tight text-orange-600">
               Discover, express, connect
             </h5>
@@ -25,7 +25,7 @@ function BannerSection() {
                 <button className="w-48 flex justify-center items-center px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg  transition">
                   <HiOutlineLogin className="mr-2" />
                   Login
-                </button>
+                </button> 
               </Link>
               <Link to={"/signup"}>
                 <button className="w-48 flex justify-center items-center px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg  transition">

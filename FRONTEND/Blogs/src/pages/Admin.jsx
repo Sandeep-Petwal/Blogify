@@ -42,6 +42,23 @@ function Admin() {
 
     const [blogs, setBlogs] = useState([]);
     const [blogsCount, setBlogsCount] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [blogLimit, setBlogLimit] = useState(10);
+    const [totalPages, setTotalPages] = useState(1);
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(prev => prev + 1);
+        }
+    };
+
+    const handlePreviousPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(prev => prev - 1);
+        }
+    };
+
+
 
     // react modal 
     const [loading, setLoading] = useState(false);
@@ -74,13 +91,14 @@ function Admin() {
         console.log("Fetching users !");
         try {
             const token = localStorage.getItem("token");
-            const response = await axios.get(`${apiUrl}/blogs`, {
+            const response = await axios.get(`${apiUrl}/blogs?page=${currentPage}&limit=${blogLimit}`, {
                 headers: {
                     'token': token,
                 }
             });
-            console.table(response.data.blogs);
+            // console.table(response.data.blogs);
             setBlogs(response.data.blogs);
+            setTotalPages(response.data.totalPages);
             setBlogsCount(response.data.count);
 
         } catch (error) {
@@ -90,8 +108,11 @@ function Admin() {
 
     useEffect(() => {
         fetchUsers();
-        fetchBlogs();
     }, [])
+
+    useEffect(() => {
+        fetchBlogs();
+    }, [currentPage, blogLimit])
 
 
     // update the cotext state if token availble
@@ -166,7 +187,7 @@ function Admin() {
             {(user.role === "user" || user.isLoggedIn === false) &&
                 <div className='h-[500px] font-bold text-orange-600 mt-10 flex justify-center items-center flex-col'>
                     <MdOutlineNoEncryptionGmailerrorred size={80} />
-                    <h1>You don't have access to this page!</h1>
+                    <h1>You don&apos;t have access to this page!</h1>
                     <Link
                         to={"/"}
                         className="flex justify-center hover:text-blue-500 items-center gap-2 py-2 px-3 text-white rounded md:bg-transparent md:p-0 dark:text-white"
@@ -178,10 +199,7 @@ function Admin() {
                 </div>
             }
 
-
-
-
-           {user.role == "admin" && <div className="adminsection">
+            {user.role == "admin" && <div className="adminsection">
                 <section className='flex justify-center items-center flex-col gap-5'>
                     <RiAdminFill size={150} />
                     <h1 className='text-2xl font-bold text-orange-600'>Admin Dashbord</h1>
@@ -251,6 +269,23 @@ function Admin() {
 
                 {/* Users list  */}
                 <div className=" relative overflow-x-auto shadow-md sm:rounded-lg mb-20">
+                    <div className='gap-2 flex justify-center content-center'>
+                        <p className='text-white text-lg'>Rows per page:</p>
+                        <select
+                            value={blogLimit}
+                            onChange={(e) => {
+                                setBlogLimit(Number(e.target.value));
+                                setCurrentPage(1);
+                            }}
+                            className='bg-slate-800 w-28 text-white p-1'>
+                            <option value="2">2</option>
+                            <option value="4">4</option>
+                            <option value="6">6</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+
+
                     <h1 className='font-bold m-3'>Total Blogs : {blogsCount}</h1>
                     <table className="overflow-scroll w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                         <thead className=" text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -276,7 +311,7 @@ function Admin() {
 
                             {/* iterating the users to table row */}
                             {
-                                blogs.map((e) => {
+                               blogs && blogs.map((e) => {
                                     return <tr key={Math.random()} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                                         <td className="px-6 py-4">{e.blog_id}</td>
                                         <td className="px-6 py-4">{e.title.slice(0, 20)}</td>
@@ -297,6 +332,18 @@ function Admin() {
                             }
                         </tbody>
                     </table>
+
+                    {/* prev and next btns */}
+                    <div className='flex justify-center items-center pb-16 text-white'>
+                        <button
+                            className={`w-24 flex ${currentPage === 1 && "hidden"} justify-center m-4 items-center px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition`}
+                            onClick={handlePreviousPage} disabled={currentPage === 1}>Previous</button>
+                        <span className='font-bold'>Page {currentPage} of {totalPages}</span>
+                        <button
+                            className={`w-24 flex ${currentPage === totalPages && "hidden"} justify-center m-4 items-center px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition`}
+                            onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button>
+                    </div>
+
                 </div>
 
 

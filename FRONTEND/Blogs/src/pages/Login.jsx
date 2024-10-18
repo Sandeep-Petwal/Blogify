@@ -1,36 +1,29 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import toast, { Toaster } from 'react-hot-toast';
 import { useNavigate } from "react-router-dom";
 
-
 function Login() {
   const apiUrl = import.meta.env.VITE_API_URL;
-  const navigate = useNavigate();  // Use navigate to redirect
+  const navigate = useNavigate(); 
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm(); 
 
-
-  // redirect to home if logged in
+  // Redirect to home if logged in
   useEffect(() => {
     if (localStorage.getItem("token")) {
-      navigate("/")
+      navigate("/");
     }
-  })
+  }, [navigate]);
 
-
-
-
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    if (!email || !password || email.length < 3 || password.length < 3) {
-      return toast.error("Please enter valid email or password!");
-    }
-
+  const handleLogin = async (data) => {
+    const { email, password } = data;
     try {
-      // Send POST request to the backend
       const response = await fetch(`${apiUrl}/login`, {
         method: "POST",
         headers: {
@@ -39,22 +32,17 @@ function Login() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (response.ok) {
-        // Store the token in localStorage
-        localStorage.setItem("token", data.token);
-
-        // Show success toast
+        localStorage.setItem("token", responseData.token);
         toast.success("Login successful!");
 
-        // Redirect to home after 1 second
         setTimeout(() => {
           navigate("/");
         }, 1000);
       } else {
-        // Show error toast if login failed
-        toast.error(data.message || "Login failed!");
+        toast.error(responseData.message || "Login failed!");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -62,27 +50,22 @@ function Login() {
     }
   };
 
-
   return (
     <section className="bg-gray-50 dark:bg-gray-900">
       <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
         <a
           href="#"
-          className="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white"
+          className="flex items-center mb-6 text-2xl font-serif font-semibold text-orange-500"
         >
-          {/* <img
-        className="w-8 h-8 mr-2"
-        src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/logo.svg"
-        alt="logo"
-      /> */}
-          Welcome Back
+          <img className="w-8 h-8 mr-2" src="/b.jpg" alt="logo" />
+          Blogify
         </a>
-        <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
-          <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-            <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
+        <div className="w-full bg-white rounded-lg shadow dark:border sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+          <div className="p-6 space-y-4 sm:p-8">
+            <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
               Login to your account
             </h1>
-            <form className="space-y-4 md:space-y-6" onSubmit={handleLogin}>
+            <form className="space-y-4" onSubmit={handleSubmit(handleLogin)}>
               <div>
                 <label
                   htmlFor="email"
@@ -91,15 +74,22 @@ function Login() {
                   Your email
                 </label>
                 <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   type="email"
-                  name="email"
                   id="email"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  required
-                  minLength={3}
+                  className={`bg-gray-50 border  text-gray-900 rounded-lg  block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white ${
+                    errors.email ? "border-red-500" : ""
+                  }`}
+                  {...register("email", {
+                    required: "Email is required",
+                    pattern: {
+                      value: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/,
+                      message: "Please enter a valid email address",
+                    },
+                  })}
                 />
+                {errors.email && (
+                  <p className="text-red-500 text-sm font-bold mt-2">{errors.email.message}</p>
+                )}
               </div>
               <div>
                 <label
@@ -109,35 +99,45 @@ function Login() {
                   Password
                 </label>
                 <input
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   type="password"
-                  name="password"
                   id="password"
                   placeholder="Enter your password"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  required
-                  minLength={3}
+                  className={`bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white ${
+                    errors.password ? "border-red-500" : ""
+                  }`}
+                  {...register("password", {
+                    required: "Password is required",
+                    minLength: {
+                      value: 3,
+                      message: "Password must be at least 3 characters long",
+                    },
+                  })}
                 />
+                {errors.password && (
+                  <p className="text-red-500 text-sm font-bold mt-2">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
               <button
                 type="submit"
-                className="w-full text-white bg-orange-600 hover:bg-orange-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center "
+                className="w-full text-white bg-orange-600 hover:bg-orange-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                disabled={isSubmitting}  // Disable button while submitting
               >
-                Login
+                {isSubmitting ? "Logging in..." : "Login"}  {/* Show loading text */}
               </button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                 Don’t have an account yet?
                 <Link
-                  to={"/signup"}
-                  className="font-medium  hover:underline text-orange-600 hover:text-orange-700"
+                  to="/signup"
+                  className="font-medium hover:underline text-orange-600"
                 >
                   &nbsp; Sign up &nbsp;
                 </Link>
                 OR
                 <Link
-                  to={"/reset"}
-                  className="font-medium  hover:underline text-orange-600 hover:text-orange-700"
+                  to="/reset"
+                  className="font-medium hover:underline text-orange-600"
                 >
                   &nbsp; Forgot password
                 </Link>
@@ -147,13 +147,10 @@ function Login() {
         </div>
       </div>
 
-      {/* react hot toast */}
-      <Toaster
-        position="top-center"
-        reverseOrder={false}
-      />
+      <Toaster position="top-center" reverseOrder={false} />
     </section>
   );
 }
 
 export default Login;
+0

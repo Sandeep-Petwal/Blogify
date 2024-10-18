@@ -45,6 +45,7 @@ export const BlogContextProvider = ({ children }) => {
                 }
             });
             if (!response.ok) {
+                localStorage.removeItem("token");
                 return console.log(" coudn't verify the token")
             }
 

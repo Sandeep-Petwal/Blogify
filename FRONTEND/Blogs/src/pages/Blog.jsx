@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import {
-    FaEdit, FaSignOutAlt, FaHome, FaRegTrashAlt, FaCheck, FaUserPlus
+    FaEdit, FaHome, FaRegTrashAlt, FaCheck, FaUserPlus
 } from 'react-icons/fa';
 import { HiOutlineLogin } from "react-icons/hi";
 import { CiEdit } from "react-icons/ci";
@@ -38,6 +38,7 @@ const Blog = () => {
     const { user, verifyUser } = useContext(BlogContext);
     const [isAuthor, setIsAuthor] = useState(false);
     const apiUrl = import.meta.env.VITE_API_URL;
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
     const [blog, setBlog] = useState([]);
     const [error, setError] = useState(false);
     const { slug } = useParams();
@@ -131,7 +132,6 @@ const Blog = () => {
     }
 
     const userName = blog.user ? blog.user.name : "";
-    const firstCharacter = userName ? userName.charAt(0) : '';
 
     // function to handle delete  operation 
     const handleDelete = async () => {
@@ -360,9 +360,13 @@ const Blog = () => {
 
             <div style={{ maxWidth: "700px", marginTop: "50px" }} className="bg-gray-800 text-white p-6 rounded-lg shadow-lg max-w-xl mx-auto">
                 <div className="flex items-center mb-4">
-                    <div className="bg-gray-600 rounded-full p-6 w-12 h-12 flex items-center justify-center text-2xl font-bold">
-                        {firstCharacter} {/* Display first character of name */}
-                    </div>
+                    {/* <div className="bg-gray-600 rounded-full p-6 w-12 h-12 flex items-center justify-center text-2xl font-bold">
+                        {firstCharacter}
+                    </div> */}
+
+                    <img src={`${baseUrl}/${blog.user?.profile_picture}`}
+                        className="rounded-full w-12 h-12 "
+                        alt="profile" />
                     <div className="ml-4">
                         <div className="font-bold">{userName}</div>
                         <div className="text-gray-400 text-sm">{new Date(blog.createdAt).toLocaleDateString()}</div>
@@ -413,10 +417,10 @@ const Blog = () => {
 
 
 
-                {user.isLoggedIn && <button className="w-40 flex justify-center items-center px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">
+                {/* {user.isLoggedIn && <button className="w-40 flex justify-center items-center px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">
                     <FaSignOutAlt className="mr-2" />
                     Logout
-                </button>}
+                </button>} */}
 
                 <Link to={"/"}>
                     <button className="w-40 flex justify-center items-center px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">

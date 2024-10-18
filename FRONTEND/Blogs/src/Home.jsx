@@ -3,6 +3,7 @@ import { BlogContext } from './context/BlogContext';
 import BannerSection from './components/BannerSection';
 import AllBlogs from './components/AllBlogs';
 import UsersBlogs from './components/UsersBlogs';
+import SearchBlogs from './components/SearchBlogs';
 
 const Home = () => {
     // context 
@@ -46,11 +47,15 @@ const Home = () => {
         getAllBlogs(currentPage, blogLimit);
     }, [currentPage, blogLimit]);
 
+    const [userLoading, setUserLoading] = useState(true);
+
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (token && !user.isLoggedIn) {
-            console.log("Token is available, now calling verifyUser from context");
-            verifyUser(token);
+            setUserLoading(true);
+            verifyUser(token).finally(() => setUserLoading(false));
+        } else {
+            setUserLoading(false);
         }
     }, [user.isLoggedIn, verifyUser]);
 
@@ -66,15 +71,23 @@ const Home = () => {
         }
     };
 
+
     return (
         <>
-            {loading && <div>Loading...</div>}
+            {(loading || userLoading) && <div>Loading...</div>}
 
             {/* If not logged in */}
-            {!user.isLoggedIn && <BannerSection />}
+            {!user.isLoggedIn && !userLoading && <BannerSection />}
+
+            {/* search blogs component  */}
+            <SearchBlogs />
 
             {/* If logged in */}
-            {user.isLoggedIn && <UsersBlogs />}
+            {user.isLoggedIn && !userLoading && <UsersBlogs />}
+
+
+            {/* Always show public blogs*/}
+            <AllBlogs blogs={blogs} author={false} heading={"Public Blogs"} />
 
             <div className='gap-2 m-10 flex justify-center content-center'>
                 <p className='text-white text-lg'>Rows per page:</p>
@@ -92,8 +105,7 @@ const Home = () => {
                 </select>
             </div>
 
-            {/* Always show public blogs*/}
-            <AllBlogs blogs={blogs} author={false} heading={"Public Blogs"} />
+
 
             {/* prev and next btns */}
             <div className='flex justify-center items-center pb-16 text-white'>
