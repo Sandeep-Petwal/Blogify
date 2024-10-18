@@ -8,11 +8,21 @@ const SMTP_PASSWORD = process.env.SMTP_PASSWORD;
 
 
 
+// exports.transporter = nodemailer.createTransport({
+//     host: SMTP_SERVER,
+//     port: SMTP_PORT,
+//     auth: {
+//         user: SMTP_USER,
+//         pass: SMTP_PASSWORD
+//     }
+// });
+
+
 exports.transporter = nodemailer.createTransport({
-    host: SMTP_SERVER,
-    port: SMTP_PORT,
+    host: "smtp.gmail.com",
+    port: 587,
     auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASSWORD
+        user: "shengsohel@gmail.com",
+        pass: "sodituvleilvuqrl"
     }
 });

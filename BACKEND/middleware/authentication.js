@@ -1,16 +1,17 @@
 const jwt = require('jsonwebtoken');
-const secret = process.env.PRIVATE_KEY;
+const secret = process.env.PRIVATE_KEY || "sandeepprasadpetwal51";
 const User = require("../models/userModel");
 
 // user auth
 exports.authentication = (req, res, next) => {
-    console.log("\nInside the auth middleware \n");
     const token = req.headers['token'];
+    console.log("\nInside the auth middleware ");
     if (!token) {
         return res.status(401).json({ message: "No token provided" });
     }
     jwt.verify(token, secret, (err, user) => {
         if (err) {
+            console.log("token verifying fail  ❌");
             return res.sendStatus(403);
         }
         req.user = user;
@@ -41,11 +42,11 @@ exports.adminAuth = async (req, res, next) => {
         const foundUser = await User.findOne({ where: { user_id } });
 
         if (!foundUser || foundUser.role !== 'admin') {
-            console.log("Not an admin ❌!");
+            console.log("Not an admin !");
             return res.status(403).json({ message: "Access denied: not an admin" });
         }
 
-        console.log("Successfully verified Admin ✅!");
+        console.log("Successfully verified Admin !");
         req.user = user;
         next();
     } catch (error) {

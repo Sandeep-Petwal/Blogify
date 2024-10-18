@@ -4,39 +4,37 @@ const Templates = require("../models/emailTemplatesModel");
 const bcrypt = require('bcryptjs');
 const handlebars = require('handlebars');
 const nodeMailer = require('../util/nodeMailer');
+const Validator = require('validatorjs');
+const validate = require('../middleware/validators');
 
 
 exports.sendForgetPassMail = async (req, res) => {
     const { email } = req.body;
-    if (!email) {
-        return res.status(400).json({ message: "Email not provided" });
+    const rules = {
+        email: "email|required|string|email_registered"
+    }
+
+    let { status, message } = await validate({ email }, rules);
+    if (!status) {
+        return res.status(400).json({ message });
     }
 
     try {
-        //if the user exists in the database
         const user = await Users.findOne({ where: { email } });
         if (!user) {
-            console.log("\nUser does not exist\n");
             return res.status(400).json({ message: "User with this email not found!" });
         }
 
         const otp = Math.floor(100000 + Math.random() * 900000);
-
-        // get the html, text, subject from db
         const template = await Templates.findOne({ where: { template_id: 2 } })
         if (!template) {
             throw new Error('Email template not found');
         }
 
-
         const compiledHtmlTemplate = handlebars.compile(template.html);
         const html = compiledHtmlTemplate({ otp });
-
-
         const compiledTextTemplate = handlebars.compile(template.text);
         const text = compiledTextTemplate({ otp });
-
-        console.log("\nUser exists, now sending OTP email:\n");
 
         // Send the email
         await nodeMailer.transporter.sendMail({
@@ -62,14 +60,27 @@ exports.sendForgetPassMail = async (req, res) => {
     }
 }
 
-
+ 
 exports.verifyForgetPassword = async (req, res) => {
     let { otp, email, password } = req.body;
     otp = parseInt(otp);
 
-    if (!otp || !email || !password) {
-        return res.status(400).json({ message: "credentials not provided" });
+    const rules = {
+        otp: "required|numeric",
+        email: "required|email",
+        password: "required|min:3"
     }
+
+    let { status, message } = await validate({ otp, email, password }, rules);
+    if (!status) {
+        return res.status(400).json({ message });
+    }
+
+
+    // const validation = new Validator({ otp, email, password }, rules);
+    // if (validation.fails()) {
+    //     return res.status(400).json({ errors: validation.errors.all(), message: Object.values(validation.errors.all()).flat()[0] });
+    // }
 
     try {
         // if user exists
@@ -113,20 +124,20 @@ exports.createTempUser = async (req, res) => {
     console.log("\ninside :: createTempUser\n");
 
     let { name, email, bio, password } = req.body;
-    email = email.trim();
-    name = name.trim();
 
-    if (!name || !email || !password) {
-        return res.status(400).json({ message: 'required fields are missing.' });
+    const rules = {
+        name: "required|string|min:3",
+        email: "required|email|email_available",
+        password: "required|string"
     }
 
-    try {
-        // if user already exists
-        const existingUser = await Users.findOne({ where: { email } });
-        if (existingUser) {
-            return res.status(400).json({ error: "User with this email already exists!" });
-        }
+    let { status, message } = await validate({ name, email, password }, rules);
+    if (!status) {
+        return res.status(400).json({ message });
+    }
 
+
+    try {
         const hashedPassword = await bcrypt.hash(password, 10);
         console.log("\n user not exists, now sending OTP email:\n");
 
@@ -154,15 +165,16 @@ exports.createTempUser = async (req, res) => {
             html
         });
 
-        console.log("\nEmail sent now creating tempuser:\n");
+        console.log("\nEmail sent now creating or updating tempuser:\n");
 
-        const user = await Tempusers.create({
-            name,
-            email,
-            bio,
-            password: hashedPassword,
-            verification_otp
-        });
+        let user = await Tempusers.findOne({ where: { email } });
+        if (user) {
+            user = await Tempusers.update({ name, email, bio, password: hashedPassword, verification_otp }, { where: { email } })
+        } else {
+            user = await Tempusers.create({ name, email, bio, password: hashedPassword, verification_otp });
+
+        }
+
 
         res.status(201).json({ message: 'OTP sent!', user: { name: user.name, email: user.email } });
     } catch (error) {
@@ -179,14 +191,23 @@ exports.verifyUserRegistration = async (req, res) => {
     let { otp, email } = req.body;
     otp = parseInt(otp);
 
-    if (!otp || !email) {
-        return res.status(400).json({ message: 'Required fields are missing .' });
+    const rules = {
+        otp: "required|numeric",
+        email: "required|email"
     }
 
-    console.log("Email is : " + email + " otp is = " + otp);
+    let { status, message } = await validate({ otp, email }, rules);
+    if (!status) {
+        return res.status(400).json({ message });
+    }
+
+
+    // const validation = new Validator({ otp, email }, rules);
+    // if (validation.fails()) {
+    //     return res.status(400).json({ errors: validation.errors.all(), message: Object.values(validation.errors.all()).flat()[0] });
+    // }
 
     try {
-        // check if user exists on tempuser or not
         const tempUser = await Tempusers.findOne({ where: { email } });
         if (!tempUser) {
             return res.status(400).json({ error: "User doesnt exists !" })
@@ -247,12 +268,16 @@ exports.verifyUserRegistration = async (req, res) => {
 }
 
 
-// changig passwrod
 // send otp to for changing password
 exports.changePassword = async (req, res) => {
     const { email, currentPassword } = req.body;
-    if (!email, !currentPassword) {
-        return res.status(400).json({ message: "Credencials not provided" });
+    const rules = {
+        email: "required|email|email_registered",
+        currentPassword: "required|min:3"
+    }
+    let { status, message } = await validate({ email, currentPassword }, rules);
+    if (!status) {
+        return res.status(400).json({ message });
     }
 
     try {
@@ -277,9 +302,8 @@ exports.changePassword = async (req, res) => {
         if (!template) {
             throw new Error('Email template not found');
         }
-        const name = "jlsdkfjk";
         const compiledHtmlTemplate = handlebars.compile(template.html);
-        const html = compiledHtmlTemplate({ otp, name });
+        const html = compiledHtmlTemplate({ otp });
 
 
         const compiledTextTemplate = handlebars.compile(template.text);
@@ -312,12 +336,25 @@ exports.changePassword = async (req, res) => {
 
 
 
-// verify change pass
+// verify change password
 exports.verifyChangePassword = async (req, res) => {
     const { email, newPassword, otp } = req.body;
-    if (!email, !newPassword, !otp) {
-        return res.status(400).json({ message: "Credencials not provided" });
+    const rules = {
+        email: "required|email",
+        newPassword: "required",
+        otp: "required"
     }
+
+    let { status, message } = await validate({ email, newPassword, otp }, rules);
+    if (!status) {
+        return res.status(400).json({ message });
+    }
+
+
+    // const validation = new Validator({ email, newPassword, otp }, rules);
+    // if (validation.fails()) {
+    //     return res.status(400).json({ errors: validation.errors.all(), message: Object.values(validation.errors.all()).flat()[0] });
+    // }
 
     try {
         // check if email and otp matches
