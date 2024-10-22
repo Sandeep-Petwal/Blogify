@@ -1,45 +1,38 @@
 const Validator = require('validatorjs');
 const Users = require('../models/userModel');
+const sequelize = require('../config/database');
 
-// registering custom async validation rule for email availability
-Validator.registerAsync('email_available', async function (email, attribute, req, passes) {
-    try {
-        const existingUser = await Users.findOne({ where: { email } });
-        if (existingUser) {
-            return passes(false, 'Email already registered !');
-        }
-        return passes(); // Email available
-    } catch (error) {
-        return passes(false, 'Error while checking email availability.');
-    }
+// new version 
+Validator.registerAsync('unique', async function (value, attribute, req, passes) {
+    const table = attribute.split(",")[0];  // 0 = tablename , 1 = columnname
+    const comumn = attribute.split(",")[1];
+
+    sequelize.query(`SELECT * FROM ${table} Where ${comumn} = "${value}" LIMIT 1`)
+        .then(([results]) => {
+            return (results.length == 0)
+                ? passes()
+                : passes(false, `The ${req} already exists in ${table} table !`)
+        }).catch((error) => {
+            return passes(false, error.message)
+        });
 });
 
-// check if email registered or not , for login  
-Validator.registerAsync('email_registered', async function (email, attribute, req, passes) {
-    try {
-        const existingUser = await Users.findOne({ where: { email } });
-        if (!existingUser) {
-            return passes(false, 'User is not registered !');
-        }
-        return passes(); // email is available
-    } catch (error) {
-        return passes(false, 'error while checking email availability.');
-    }
+
+Validator.registerAsync('exist', async function (value, attribute, req, passes) {
+    const table = attribute.split(",")[0];  // 0 = tablename , 1 = columnname
+    const comumn = attribute.split(",")[1];
+
+    sequelize.query(`SELECT * FROM ${table} Where ${comumn} = "${value}" LIMIT 1`)
+        .then(([results]) => {
+            return (results.length == 0)
+                ? passes(false, `The ${req} not exists !`)
+                : passes()
+        }).catch((error) => {
+            return passes(false, error.message)
+        });
 });
 
-// check if user with user_id found
-Validator.registerAsync('user_registered', async function (user_id, attribute, req, passes) {
-    try {
-        const existingUser = await Users.findOne({ where: { user_id } });
-        if (!existingUser) {
-            return passes(false, 'User with this user id not found !');
-        }
-        return passes(); // email is available
-    } catch (error) {
-        return passes(false, 'error while checking user availability.');
-    }
-});
- 
+
 
 const getFirstErrorMessage = (validation) => {
     const firstKey = Object.keys(validation.errors.errors)[0];

@@ -1,30 +1,23 @@
-const Users = require("../models/userModel");
-const Tempusers = require("../models/tempUserModel");
-const Templates = require("../models/emailTemplatesModel");
+const { Users, Templates, Tempusers } = require("../models")
 const bcrypt = require('bcryptjs');
 const handlebars = require('handlebars');
 const nodeMailer = require('../util/nodeMailer');
-const Validator = require('validatorjs');
 const validate = require('../middleware/validators');
+const response = require("../util/response")
 
 
 exports.sendForgetPassMail = async (req, res) => {
     const { email } = req.body;
     const rules = {
-        email: "email|required|string|email_registered"
+        email: "email|required|string|exist:users,email"
     }
 
     let { status, message } = await validate({ email }, rules);
     if (!status) {
-        return res.status(400).json({ message });
+        return response.failed(res, "Provide currect information !", message)
     }
 
     try {
-        const user = await Users.findOne({ where: { email } });
-        if (!user) {
-            return res.status(400).json({ message: "User with this email not found!" });
-        }
-
         const otp = Math.floor(100000 + Math.random() * 900000);
         const template = await Templates.findOne({ where: { template_id: 2 } })
         if (!template) {
@@ -44,23 +37,17 @@ exports.sendForgetPassMail = async (req, res) => {
             text,
             html
         });
-
-
-        console.log("\nemail send, now storing OTP to DB:\n");
         const updatedUser = await Users.update({ otp }, { where: { email } });
         if (updatedUser[0] === 0) {
-            console.log("\nerror in   storing  OTP to db \n");
-            return res.status(400).json({ message: "error processing OTP !" });
+            return response.failed(res, "Error Processign OTP", "Error Processing OTP")
         }
-        res.status(200).json({ message: 'OTP sent to your registered email' });
-
+        return response.success(res, "OTP sent to your registered email")
     } catch (error) {
-        console.log("\nerror in sendForgetPassMail: \n" + error);
-        res.status(500).json({ message: 'Error finding user or sending OTP!' });
+        return response.serverError(res);
     }
 }
 
- 
+
 exports.verifyForgetPassword = async (req, res) => {
     let { otp, email, password } = req.body;
     otp = parseInt(otp);
@@ -73,14 +60,8 @@ exports.verifyForgetPassword = async (req, res) => {
 
     let { status, message } = await validate({ otp, email, password }, rules);
     if (!status) {
-        return res.status(400).json({ message });
+        return response.failed(res, "Provide currect information !", message)
     }
-
-
-    // const validation = new Validator({ otp, email, password }, rules);
-    // if (validation.fails()) {
-    //     return res.status(400).json({ errors: validation.errors.all(), message: Object.values(validation.errors.all()).flat()[0] });
-    // }
 
     try {
         // if user exists
@@ -88,13 +69,13 @@ exports.verifyForgetPassword = async (req, res) => {
         const user = await Users.findOne({ where: { email } });
         if (!user) {
             console.log("user does not exist");
-            return res.status(400).json({ message: "User with this email not found!" });
+            return response.notFound(res, "No blogs found for the user");
         }
 
         // console.log(user);
         console.log("\n Matching the otp user.otp :" + user.otp + " otp : " + otp);
         if (user.otp !== otp) {
-            return res.status(400).json({ message: "OTP does not match" });
+            return response.failed(res, "Otp does not match", "Otp does not match")
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -107,16 +88,15 @@ exports.verifyForgetPassword = async (req, res) => {
 
         if (updatePassword[0] === 0) {
             console.log("Error in updating the password !");
-            return res.status(400).json({ message: "Error updating password !" });
+            return response.failed(res, "Error updating password", "Error updating password")
         }
-        res.status(200).json({ message: 'Successfully updated the password' });
+        return response.success(res, "Successfully updated the password",)
 
     } catch (error) {
         console.error("Error in verifyOtp:", error);
-        res.status(500).json({ message: 'An error occurred while verifying OTP or updating password!' });
+        return response.serverError(res);
     }
 };
-
 
 
 // create a temp user , send otp to provided email and storre otp to tempuser model
@@ -126,14 +106,14 @@ exports.createTempUser = async (req, res) => {
     let { name, email, bio, password } = req.body;
 
     const rules = {
+        email: "required|email|unique:users,email",
         name: "required|string|min:3",
-        email: "required|email|email_available",
         password: "required|string"
     }
 
     let { status, message } = await validate({ name, email, password }, rules);
     if (!status) {
-        return res.status(400).json({ message });
+        return response.failed(res, "Provide currect information !", message)
     }
 
 
@@ -175,14 +155,12 @@ exports.createTempUser = async (req, res) => {
 
         }
 
-
-        res.status(201).json({ message: 'OTP sent!', user: { name: user.name, email: user.email } });
+        res.json({ message: 'OTP sent!', user: { name: user.name, email: user.email } });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "server error. try again later.", error: error.message });
+        return response.serverError(res);
     }
 };
-
 
 
 // verify user registration with stored and provided otp
@@ -198,24 +176,18 @@ exports.verifyUserRegistration = async (req, res) => {
 
     let { status, message } = await validate({ otp, email }, rules);
     if (!status) {
-        return res.status(400).json({ message });
+        return response.failed(res, "Provide currect information !", message)
     }
-
-
-    // const validation = new Validator({ otp, email }, rules);
-    // if (validation.fails()) {
-    //     return res.status(400).json({ errors: validation.errors.all(), message: Object.values(validation.errors.all()).flat()[0] });
-    // }
 
     try {
         const tempUser = await Tempusers.findOne({ where: { email } });
         if (!tempUser) {
-            return res.status(400).json({ error: "User doesnt exists !" })
+            return response.failed(res, "User does not exists !")
         }
 
         console.log("\n Matching the otp tempUser.verification_otp :" + tempUser.verification_otp + " otp : " + otp);
         if (tempUser.verification_otp !== otp) {
-            return res.status(400).json({ message: "OTP does not match" });
+            return response.failed(res, "Provide currect information !", "OTP does not match")
         }
 
         console.log("\nOtp matches now creatign user in user table and deleting the tempuser\n");
@@ -225,7 +197,7 @@ exports.verifyUserRegistration = async (req, res) => {
 
         const user = await Users.create({ name, email: user_email, bio, password });
         if (!user) {
-            return res.status(400).json({ message: "error while creating the user !" })
+            return response.failed(res, "Provide currect information !", message)
         }
 
 
@@ -251,18 +223,18 @@ exports.verifyUserRegistration = async (req, res) => {
             html
         });
 
-        // finally deletign user from tempuser
+        // finally deletinG user from tempuser
         try {
             await Tempusers.destroy({ where: { email } })
         } catch (error) {
             console.log("Error deletign tempuser");
         }
 
-        res.status(201).json({ message: 'User created successfully', user });
+        res.json({ message: 'User created successfully', user });
 
     } catch (error) {
         console.error("errr in verifyUserRegistration:", error);
-        return res.status(500).json({ message: "Error verifying the user", error: error.message });
+        return response.serverError(res);
     }
 
 }
@@ -272,12 +244,12 @@ exports.verifyUserRegistration = async (req, res) => {
 exports.changePassword = async (req, res) => {
     const { email, currentPassword } = req.body;
     const rules = {
-        email: "required|email|email_registered",
+        email: "required|email|exist:users,email",
         currentPassword: "required|min:3"
     }
     let { status, message } = await validate({ email, currentPassword }, rules);
     if (!status) {
-        return res.status(400).json({ message });
+        return response.failed(res, "Provide currect information !", message)
     }
 
     try {
@@ -285,13 +257,13 @@ exports.changePassword = async (req, res) => {
         const user = await Users.findOne({ where: { email } });
         if (!user) {
             console.log("\nUser does not exist\n");
-            return res.status(400).json({ message: "User with this email not found!" });
+            return response.failed(res, "Provide currect information !", "User with this email not found!")
         }
 
         // match the password
         const isPasswordMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isPasswordMatch) {
-            return res.status(401).json({ message: "Invalid email or password " });
+            return response.failed(res, "Provide currect information !", "Invalid email or password!")
         }
 
         console.log("\nemail exists and password matches now sending otp\n");
@@ -324,16 +296,15 @@ exports.changePassword = async (req, res) => {
         const updatedUser = await Users.update({ otp }, { where: { email } });
         if (updatedUser[0] === 0) {
             console.log("\nerror in   storing  OTP to db \n");
-            return res.status(400).json({ message: "error processing OTP !" });
+            return response.failed(res, "Provide currect information !", "Error processign OTP !")
         }
-        res.status(200).json({ message: 'OTP sent to your registered email' });
+        return response.success(res, "OTP sent ");
 
     } catch (error) {
         console.log("\nerror in changePassword: \n" + error);
-        res.status(500).json({ message: 'Error in changing password !' });
+        return response.serverError(res);
     }
 }
-
 
 
 // verify change password
@@ -347,21 +318,14 @@ exports.verifyChangePassword = async (req, res) => {
 
     let { status, message } = await validate({ email, newPassword, otp }, rules);
     if (!status) {
-        return res.status(400).json({ message });
+        return response.failed(res, "Provide currect information !", message)
     }
-
-
-    // const validation = new Validator({ email, newPassword, otp }, rules);
-    // if (validation.fails()) {
-    //     return res.status(400).json({ errors: validation.errors.all(), message: Object.values(validation.errors.all()).flat()[0] });
-    // }
 
     try {
         // check if email and otp matches
         const user = await Users.findOne({ where: { email, otp } });
         if (!user) {
-            console.log("\nUser does not exist\n");
-            return res.status(400).json({ message: "OTP does not matches !" });
+            return response.failed(res, "OTP does not matches", "OTP does not matches")
         }
 
         // update the password
@@ -370,15 +334,14 @@ exports.verifyChangePassword = async (req, res) => {
 
         const updatedUser = await Users.update({ password: hashedPassword }, { where: { email } });
         if (!updatedUser) {
-            return res.status(400).json({ message: "Error while Changing password !" });
+            return response.failed(res, "Error while Changing password !", "Error while Changing password !")
         }
-
 
         console.log("\nPassword change success , now deleting otp:\n");
         await Users.update({ otp: 0 }, { where: { email } })
-        res.status(200).json({ message: 'Password changed successfully !' });
+        return response.success(res, "Password changed successfully");
     } catch (error) {
         console.log("\nerror in verifyChangePassword: \n" + error);
-        res.status(500).json({ message: 'Error Changing the password!' });
+        return response.serverError(res);
     }
 }

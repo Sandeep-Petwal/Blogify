@@ -1,9 +1,8 @@
 const slugify = require('slugify');
 const { Op } = require('sequelize');
-const Blogs = require('../models/blogsModel');
-const Users = require('../models/userModel');
-const Validator = require('validatorjs');
+const { Users, Blogs } = require("../models")
 const validate = require('../middleware/validators');
+const response = require("../util/response.js")
 
 
 exports.searchBlogs = async (req, res) => {
@@ -14,7 +13,7 @@ exports.searchBlogs = async (req, res) => {
 
     let { status, message } = await validate({ search_input }, rules);
     if (!status) {
-        return res.status(400).json({ message });
+        return response.failed(res, message)
     }
 
     try {
@@ -23,6 +22,7 @@ exports.searchBlogs = async (req, res) => {
                 title: {
                     [Op.like]: `%${search_input}%`
                 },
+                active: true
             },
             limit: 5,
             order: [
@@ -34,12 +34,12 @@ exports.searchBlogs = async (req, res) => {
         if (blogs && blogs.length > 0) {
             res.json(blogs);
         } else {
-            res.status(404).json({ message: "No blogs found !" })
+            return response.failed(res, "No blogs found");
         }
-        
+
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: 'Error fetching blogs' });
+        return response.serverError(res, "Error fetching blogs")
     }
 
 }
@@ -52,17 +52,17 @@ exports.getAllBlogs = async (req, res) => {
             }
         );
         if (blogs.length == 0) {
-            return res.status(204).json({ error: "No todos found !" })
+            return response.noContent(res)
         }
         res.json(blogs);
     } catch (error) {
         console.error(error);
-        return res.status(400).json({ message: "Error Getting the user !", error })
+        return response.failed(res, "Error while fetching all blogs");
     }
 };
 
 // paginate blogs
-exports.getAllBlogsPaginate = async (req, res) => {
+exports.getPublicBlogs = async (req, res) => {
     let { page = 1, limit = 10 } = req.query; // default page =  1 ,  limit = 10
     limit = Math.min(limit, 20);             // maximum 20 
 
@@ -71,6 +71,9 @@ exports.getAllBlogsPaginate = async (req, res) => {
 
     try {
         const { count, rows } = await Blogs.findAndCountAll({
+            where: {
+                active: true
+            },
             order: [
                 ['blog_id', 'DESC'], //descending order
             ],
@@ -83,7 +86,7 @@ exports.getAllBlogsPaginate = async (req, res) => {
         const totalPages = Math.ceil(count / limit);
 
         if (rows.length === 0) {
-            return res.status(204).json({ error: "No blogs found!" });
+            return response.noContent(res, "No blogs found !")
         }
 
         res.json({
@@ -94,7 +97,7 @@ exports.getAllBlogsPaginate = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        return res.status(400).json({ message: "Error getting blogs!", error });
+        return response.serverError(res, "Error fetching blogs")
     }
 };
 
@@ -111,12 +114,12 @@ exports.getBlogBySlug = async (req, res) => {
         });
 
         if (!blog || blog.length === 0) {
-            return res.status(404).json({ message: "Blog post not found !", blog })
+            return response.failed(res, "Blog post not found !");
         }
         return res.json(blog)
     } catch (error) {
         console.error(error);
-        return res.status(400).json({ message: "Error Getting the Blog !", error })
+        return response.serverError(res, "Error fetching blog")
     }
 }
 
@@ -128,15 +131,89 @@ exports.getBlogsByUser = async (req, res) => {
             include: [{ model: Users, as: "user", attributes: ['name', 'email'] }]
         });
         if (blogs.length === 0) {
-            return res.status(404).json({ message: "No blogs found for this user!" });
+            return response.notFound(res, "No blogs found for the user");
         }
-        console.log(`\nUser id : ${user_id}\n`);
-        res.status(200).json(blogs);
+        res.json(blogs);
     } catch (error) {
         console.error("Error fetching blogs for user: ", error);
-        return res.status(500).json({ message: "Error fetching blogs for user!", error });
+        return response.serverError(res, "Error fetching blogs for user")
     }
 };
+
+// get users public profile 
+exports.getPublicProfile = async (req, res) => {
+    const { user_id } = req.params;
+
+    const rules = {
+        user_id: "required|numeric|exist:users,user_id",
+    };
+    let { status, message } = await validate({ user_id }, rules);
+    if (!status) {
+        return response.failed(res, "User not found  !", message)
+    }
+    try {
+        const profile = await Users.findOne({
+            where: { user_id },
+            attributes: { exclude: ['password', 'otp', "role"] },
+        });
+        if (!profile) {
+            return response.notFound(res, "User does not found !")
+        }
+        return response.success(res, "Success", profile);
+    } catch (error) {
+        console.log("Error Getting users profile: " + error);
+        return response.serverError(res);
+    }
+}
+
+// users public blogs
+exports.getUsersPublicBlog = async (req, res) => {
+    const { user_id } = req.params;
+    let { page = 1, limit = 10 } = req.query;
+    const offset = (page - 1) * limit;
+
+    const rules = {
+        user_id: "required|numeric|exist:users,user_id",
+        page: "numeric|min:1",
+        limit: "numeric|min:1|max:20"
+    };
+    let { status, message } = await validate({ user_id, page, limit }, rules);
+    if (!status) {
+        return response.failed(res, "Can not get the users blogs !", message)
+    }
+
+    // return users profile and blogs
+    try {
+        const blogs = await Blogs.findAll({
+            where: { user_id },
+            limit: parseInt(limit),
+            offset: parseInt(offset),
+        });
+        if (!blogs) {
+            return response.notFound(res, "No blogs found !")
+        }
+        return response.success(res, "Success", blogs);
+    } catch (error) {
+        console.log("Error Getting users profile: " + error);
+        return response.serverError(res);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 exports.createBlog = async (req, res) => {
     const user_id_params = req.params.user_id;
@@ -144,15 +221,15 @@ exports.createBlog = async (req, res) => {
     const { title, content, } = req.body;
 
     const rules = {
-        title: 'required|max:100|min:5',
+        title: 'required|max:100|min:5|unique:blogs,title',
         content: 'required|min:5',
-        user_id: "required|numeric",
+        user_id: "required|numeric|exist:users,user_id",
         user_id_params: "required|numeric"
     };
 
     let { status, message } = await validate({ title, content, user_id, user_id_params }, rules);
     if (!status) {
-        return res.status(400).json({ message });
+        return response.failed(res, "Provide currect information !", message)
     }
 
     try {
@@ -163,10 +240,10 @@ exports.createBlog = async (req, res) => {
             trim: true
         });
         const blog = await Blogs.create({ title, content, user_id, slug });
-        res.status(201).json({ message: 'Blog created successfully', blog });
+        res.json({ message: 'Blog created successfully', blog });
     } catch (error) {
         console.log("Error registering the blog: " + error);
-        return res.status(400).json({ message: "Error registering the blog!", error });
+        return response.serverError(res);
     }
 };
 
@@ -175,27 +252,28 @@ exports.updateBlog = async (req, res) => {
     const { user_id } = req.user;
     const { active, title, content, view } = req.body;
 
+    console.log("\n::inside updateBlog , active : \n", active);
     const rules = {
-        blog_id: "required|numeric",
-        user_id: "required|numeric",
+        blog_id: "required|numeric|exist:blogs,blog_id",
+        user_id: "required|numeric|exist:users,user_id",
         title: 'max:100|min:5',
         content: 'min:5',
     }
 
     let { status, message } = await validate({ blog_id, user_id, title, content }, rules);
     if (!status) {
-        return res.status(400).json({ message });
+        return response.failed(res, "Provide currect information !", message)
     }
 
 
     try {
         const blog = await Blogs.findOne({ where: { blog_id } });
         if (!blog) {
-            return res.status(404).json({ message: "Blog not found!" });
+            return response.notFound(res, "Blog not found");
         }
 
         if (blog.user_id !== user_id) {
-            return res.status(403).json({ message: "User is not the author!" });
+            return response.unauthorized(res, "User is not Author")
         }
 
         const slug = await slugify(title, {
@@ -214,20 +292,20 @@ exports.updateBlog = async (req, res) => {
         if (view !== undefined) updatedFields.view = view;
 
         if (Object.keys(updatedFields).length === 0) {
-            return res.status(400).json({ message: "No fields provided for update." });
+            return response.failed(res, "No fields provided for update.");
         }
 
         const data = await Blogs.update(updatedFields, { where: { blog_id } });
 
         if (data[0] === 0) {
-            return res.status(400).json({ message: "No changes made or blog not found!" });
+            return response.failed(res, "No changes made or blog not found!",)
         }
 
         const updatedBlog = await Blogs.findOne({ where: { blog_id } });
-        return res.status(200).json({ message: "Blog updated successfully!", data: updatedBlog });
+        return response.success(res, "Blog updated successfully !", updatedBlog)
     } catch (error) {
         console.error("Error updating the blog: ", error);
-        return res.status(500).json({ message: "Error updating the blog!", error });
+        return response.serverError(res);
     }
 };
 
@@ -236,32 +314,38 @@ exports.deleteBlog = async (req, res) => {
     console.log("\n::inside deleteBlog");
     const { blog_id } = req.params;
     const { user_id } = req.user;
-    if (!blog_id || !user_id) {
-        return res.status(400).json({ message: 'Required fields are missing.' });
+
+    const rules = {
+        blog_id: "required|numeric",
+        user_id: "required",
+    }
+
+    let { status, message } = await validate({ blog_id, user_id }, rules);
+    if (!status) {
+        return response.failed(res, "Provide currect information !", message)
     }
 
     try {
         const blog = await Blogs.findOne({ where: { blog_id } });
         if (!blog) {
-            return res.status(404).json({ message: "Blog not found!" });
+            return response.notFound(res, "No blog found");
+
         }
 
         if (blog.user_id !== user_id) {
             console.log("Blog user id" + blog.user_id);
             console.log("user id" + user_id);
-            return res.status(403).json({ message: "User is not the author!" });
+            return response.unauthorized(res, "User is not author !")
         }
 
         const rowsDeleted = await Blogs.destroy({ where: { blog_id } });
         if (rowsDeleted === 0) {
-            return res.status(400).json({ message: "No changes made or blog not found!" });
+            return response.notFound(res, "No blogs found");
         }
-        return res.status(200).json({ message: "Blog Deleted !" });
+        return res.json({ message: "Blog Deleted !" });
     } catch (error) {
         console.error("Error updating the blog: ", error);
-        return res.status(500).json({ message: "Error updating the blog!", error });
+        return response.serverError(res);
     }
 
 }
-
-

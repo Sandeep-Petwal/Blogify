@@ -10,8 +10,8 @@ const limiter = rateLimit({
 
 // rate limit for auth routes
 const authLimit = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    max: 50, 
+    windowMs: 1 * 60 * 1000,
+    max: 20, 
     standardHeaders: true,                  
     legacyHeaders: false, 
 });

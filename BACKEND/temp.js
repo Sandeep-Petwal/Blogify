@@ -1,36 +1,3 @@
-
-
-// crreate user function 
-exports.createUser = async (req, res) => {
-    let { name, email, bio, password } = req.body;
-    const rules = {
-        name: "required|string|min:3|max:50",
-        password: "required|string|min:3",
-        bio: "max:200|string",
-        email: "required|email|email_available"
-    };
-
-    let { status, message } = await validate({ name, email, bio, password }, rules);
-    console.table({ status, message });
-
-    if (!status) {
-        return res.status(400).json({ message });
-    }
-
-    // validation passes
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await Users.create({ name, email, bio, password: hashedPassword });
-        return res.status(201).json({ message: 'User registered successfully', user });
-    } catch (error) {
-        return res.status(400).json({ message: "Error registering the user!", error });
-    }
-};
-
-
-
-
-// validation logics
 import Validator from 'validatorjs';
 import { Model } from '../Database/sequelize.js';
 import _ from "lodash";
@@ -153,11 +120,85 @@ let { status, message } = await CValidator(request, {
   });
 
 
+  // validator.js > blogify
+  const Validator = require('validatorjs');
+const Users = require('../models/userModel');
+
+// registering custom async validation rule for email availability
+Validator.registerAsync('exist', async function (email, attribute, req, passes) {
+    try {
+        const existingUser = await Users.findOne({ where: { email } });
+        if (existingUser) {
+            return passes(false, 'Email already registered !');
+        }
+        return passes(); // Email available
+    } catch (error) {
+        return passes(false, 'Error while checking email availability.');
+    }
+});
+
+// new version
 
 
 
 
 
-  
+
+// check if email registered or not , for login  
+Validator.registerAsync('notRegistered', async function (email, attribute, req, passes) {
+    try {
+        const existingUser = await Users.findOne({ where: { email } });
+        if (!existingUser) {
+            return passes(false, 'User is not registered !');
+        }
+        return passes(); // email is available
+    } catch (error) {
+        return passes(false, 'error while checking email availability.');
+    }
+});
 
 
+
+
+
+
+
+
+
+
+// check if user with user_id found
+Validator.registerAsync('user_registered', async function (user_id, attribute, req, passes) {
+    try {
+        const existingUser = await Users.findOne({ where: { user_id } });
+        if (!existingUser) {
+            return passes(false, 'User with this user id not found !');
+        }
+        return passes(); // email is available
+    } catch (error) {
+        return passes(false, 'error while checking user availability.');
+    }
+});
+ 
+
+const getFirstErrorMessage = (validation) => {
+    const firstKey = Object.keys(validation.errors.errors)[0];
+    return validation.errors.first(firstKey);
+}
+
+// validating input against rules and return a promise
+function validate(request, rules, messages = {}) {
+    if (typeof request !== 'object' || typeof rules !== 'object' || typeof messages !== 'object') {
+        return { status: 0, message: 'Invalid Params' };
+    }
+
+    const validation = new Validator(request, rules, messages);
+    return new Promise((resolve, reject) => {
+        validation.checkAsync(
+            () => resolve({ status: 1, message: "Validation Passes" }), // Validation passed
+            () => reject({ status: 0, message: getFirstErrorMessage(validation) }) // Validation failed
+        );
+    }).then(result => result) // optional
+        .catch(err => err); // errors in promise
+}
+
+module.exports = validate;

@@ -29,6 +29,13 @@ const Users = sequelize.define("Users", {
         allowNull: true,
         defaultValue: 'uploads/default_profile.jpg',
     },
+    profile_picture_url: {
+        type: DataTypes.VIRTUAL,
+        get() {
+            const baseUrl = process.env.SERVER_URL || 'http://localhost:3000/';
+            return this.getDataValue('profile_picture') ? baseUrl + this.getDataValue('profile_picture') : baseUrl + "uploads/default_profile.jpg";
+        }
+    },
     bio: {
         type: DataTypes.STRING,
         require: false,
@@ -43,24 +50,8 @@ const Users = sequelize.define("Users", {
         defaultValue: 0,
     }
 }, {
-
     timestamps: true,
 });
 
-// One-to-Many Relationship
-Users.hasMany(Blogs, {
-    foreignKey: "user_id",     // foreign key ref => Users primary key
-    as: 'user',               // for eager loading helpfull on attrubute query
-    onDelete: 'CASCADE',     // Cascade delete when a user is deleted
 
-});
-
-// hasOne relationship
-Blogs.belongsTo(Users, {
-    foreignKey: "user_id", // foreign key in the Blog references => Users primary key
-    as: 'user',
-    onDelete: 'CASCADE'  //  when the user is deleted, blogs are also deleted
-})
-
- 
 module.exports = Users
