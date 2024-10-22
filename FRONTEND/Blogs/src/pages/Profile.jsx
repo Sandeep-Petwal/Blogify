@@ -123,7 +123,7 @@ function Profile() {
             console.log("Error while confirming otp:", error);
         } finally {
             setLoading(false);
-            setStep(1);
+            // setStep(1);
 
         }
     }
@@ -158,6 +158,7 @@ function Profile() {
             }
 
             // Create a FormData object to hold the file data and other fields
+            setLoading(true);
             const formData = new FormData();
             // add image if it is a valid file
             if (file && !(file.size > 1000000) && file.type.startsWith('image/')) {
@@ -191,6 +192,8 @@ function Profile() {
             // Handle error based on Axios response structure
             const errorMessage = error.response?.data.message || error.message || "Unknown error";
             toast.error(errorMessage);
+        }finally{
+            setLoading(false)
         }
     }
 

@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { BlogContext } from '../context/BlogContext';
 import { RiAdminLine } from "react-icons/ri";
 import { FaEdit, FaSignOutAlt, FaHome } from 'react-icons/fa';
@@ -9,7 +9,7 @@ import { FaUserPlus } from "react-icons/fa6";
 import { HiOutlineLogin } from "react-icons/hi";
 
 
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 
 
 function Navbar() {
@@ -19,6 +19,11 @@ function Navbar() {
     const toggleMenu = () => {
         setIsOpen(!isOpen);
     };
+
+    if (!user.isLoggedIn && localStorage.getItem("token")) {
+        console.log("\nverifyieng user\n");
+        verifyUser(localStorage.getItem("token"));
+    }
 
     return (
         <nav className="bg-white border-gray-200 dark:bg-gray-800">
@@ -58,14 +63,19 @@ function Navbar() {
                 <div className={`${isOpen ? 'block' : 'hidden'} w-full md:block md:w-auto`} id="navbar-default">
                     <ul className="font-medium items-center flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-800 dark:border-gray-bg-gray-800">
                         <li>
-                            <Link
+                            <NavLink
                                 to={"/"}
-                                className=" flex justify-center hover:text-orange-500 items-center gap-2 py-2 px-3 text-white  rounded md:bg-transparent  md:p-0 dark:text-white "
+                                className={({ isActive }) =>
+                                    `flex justify-center hover:text-orange-500 items-center gap-2 py-2 px-3   rounded md:bg-transparent  md:p-0 
+                                  ${isActive ? 'text-orange-600 bg-gray-600 font-bold' : 'text-white'}`
+                                }
+                                //  className=" flex justify-center {} hover:text-orange-500 items-center gap-2 py-2 px-3 text-white  rounded md:bg-transparent  md:p-0 dark:text-white "
                                 aria-current="page"
                             >
                                 <FaHome />
                                 Home
-                            </Link>
+                            </NavLink>
+
                         </li>
 
 
@@ -73,24 +83,34 @@ function Navbar() {
                         {user.isLoggedIn &&
                             <div className='flex items-center flex-wrap justify-center gap-5'>
                                 <li>
-                                    <Link
+                                    <NavLink
                                         to={"/profile"}
-                                        className=" flex justify-center hover:text-orange-500 items-center gap-2 py-2 px-3 text-white  rounded md:bg-transparent  md:p-0 dark:text-white "
+                                        className={({ isActive }) =>
+                                            `flex justify-center hover:text-orange-500 items-center gap-2 py-2 px-3   rounded md:bg-transparent  md:p-0 
+                                          ${isActive ? 'text-orange-600 bg-gray-600 font-bold' : 'text-white'}`
+                                        }
+
+                                        // className=" flex justify-center hover:text-orange-500 items-center gap-2 py-2 px-3 text-white  rounded md:bg-transparent  md:p-0 dark:text-white "
                                         aria-current="page"
                                     >
                                         <FaRegCircleUser />
                                         Profile
-                                    </Link>
+                                    </NavLink>
                                 </li>
                                 {user.role == "admin" && <li>
-                                    <Link
+                                    <NavLink
                                         to={"/admin"}
-                                        className=" flex justify-center hover:text-orange-500 items-center gap-2 py-2 px-3 text-white  rounded md:bg-transparent  md:p-0 dark:text-white "
+                                        className={({ isActive }) =>
+                                            `flex justify-center hover:text-orange-500 items-center gap-2 py-2 px-3   rounded md:bg-transparent  md:p-0 
+                                          ${isActive ? 'text-orange-600 bg-gray-600 font-bold' : 'text-white'}`
+                                        }
+
+                                        // className=" flex justify-center hover:text-orange-500 items-center gap-2 py-2 px-3 text-white  rounded md:bg-transparent  md:p-0 dark:text-white "
                                         aria-current="page"
                                     >
                                         <RiAdminLine />
                                         Admin Dashbord
-                                    </Link>
+                                    </NavLink>
                                 </li>}
                                 <button
                                     onClick={logout}

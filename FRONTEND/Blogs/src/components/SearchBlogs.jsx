@@ -1,10 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 
 function debounce(functionToDebounce, delayInMs) {
     let timerID;
-
     // return function that wraps the original function
     return function (...args) {
         // clear any existing timer
@@ -51,6 +50,8 @@ function SearchBlogs() {
     //  memoized debounced  fetchBlogs function
     const debouncedFetchBlogs = useCallback(debounce(fetchBlogs, 1000), []);
 
+
+    
     // Handle input change
     const handleInputChange = (e) => {
         const value = e.target.value;
@@ -60,11 +61,22 @@ function SearchBlogs() {
         setSearchValue(value);
     };
 
+    // highlight
+    const highlightText = (text, query) => {
+        if (!query) return text;
+        const parts = text.split(new RegExp(`(${query})`, 'gi')); // array saparating the query
+        return parts.map((part, index) =>
+            part.toLowerCase() === query.toLowerCase() ?
+                <span key={index} className="bg-yellow-400 dark:bg-yellow-700 ">{part}</span> : part
+        );
+    };
+
+
     return (
         <div className="mt-20">
             {/* Search bar */}
             <section >
-                <form className="max-w-md mx-auto " onSubmit={(e) => e.preventDefault()}>
+                <form className="max-w-lg mx-auto " onSubmit={(e) => e.preventDefault()}>
                     <label
                         htmlFor="default-search"
                         className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white"
@@ -92,14 +104,14 @@ function SearchBlogs() {
                         <input
                             type="search"
                             id="default-search"
-                            className="block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            className="block w-full h-16 p-4 ps-10 text-lg caret-orange-600 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             placeholder="Search Blogs"
                             value={searchValue}
                             onChange={handleInputChange}
                         />
                         <button
                             type="submit"
-                            className="text-white absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                            className="text-white mb-1 absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                         >
                             {
                                 isFetching ?
@@ -113,8 +125,6 @@ function SearchBlogs() {
             </section>
 
             <section className="max-w-md mx-auto mt-2 mb-32">
-                {/* Loading indicator */}
-                {/* {isFetching && <p className="text-center text-gray-500 dark:text-gray-400">Loading...</p>} */}
                 {isFetching && <p className="text-center text-gray-500 dark:text-gray-400">Loading...</p>}
 
                 {/* Results list */}
@@ -125,12 +135,15 @@ function SearchBlogs() {
                                 <Link
                                     to={`blog/${blog.slug}`}>
                                     <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                                        {blog.title.slice(0, 50)}
+                                        {/* {blog.title.slice(0, 50)} */}
+                                        {highlightText(blog.title.slice(0, 42), searchValue)} 
+                                        {blog.title.length > 50 && " . . . "}
+
                                     </h3>
                                     <p className="text-sm text-gray-600 dark:text-gray-300">
                                         {blog.content.slice(0, 60)}...
                                     </p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    <p className="text-xs text-gray-500 mt-2 dark:text-gray-400">
                                         Posted on: {new Date(blog.createdAt).toLocaleDateString()}
                                     </p>
                                 </Link>

@@ -10,6 +10,7 @@ import Notfound from "../src/pages/Notfound"
 import Profile from "../src/pages/Profile";
 import Admin from "../src/pages/Admin";
 import ForgetPassword from "../src/pages/ForgetPassword";
+import PublicProfile from "../src/pages/PublicProfile";
 
 const router = createBrowserRouter([
     {
@@ -33,8 +34,12 @@ const router = createBrowserRouter([
                 element: <Blog />,
             },
             {
-                path: "/profile",
+                path: "/profile",  //  logged in profile
                 element: <Profile />,
+            },
+            {
+                path : "/profile/:user_id",   // public profile of user
+                element : <PublicProfile />
             },
             {
                 path: "/admin",

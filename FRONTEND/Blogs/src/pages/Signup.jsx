@@ -74,7 +74,7 @@ function Signup() {
       setStep(3);
     } catch (error) {
       console.log(error);
-      toast.error("Error Verifying OTP!");
+      toast.error("OTP does not match !");
     } finally {
       setLoading(false);
     }
@@ -154,6 +154,17 @@ function Signup() {
                   {loading && <img src="/Loading.gif" alt="Loading" className="h-5" />}
                   {!loading && "Send OTP"}
                 </button>
+
+
+                <p className="text-sm font-light text-gray-500 dark:text-gray-400">
+                Already have a account ?
+                <Link
+                  to="/login"
+                  className="font-medium hover:underline text-orange-600"
+                >
+                  &nbsp; Login &nbsp;
+                </Link>              </p>
+
               </form>
             </div>
           )}

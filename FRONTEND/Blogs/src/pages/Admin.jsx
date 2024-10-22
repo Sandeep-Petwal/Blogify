@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 import Modal from 'react-modal';
+import SearchBlogs from '../components/SearchBlogs';
 
 // for react modal
 const customStyles = {
@@ -206,6 +207,9 @@ function Admin() {
                 </section>
 
 
+                {/* search box  */}
+                <SearchBlogs />
+
                 {/* Users list  */}
                 <div className=" relative overflow-x-auto shadow-md sm:rounded-lg mb-20">
                     <h1 className='font-bold m-3'>Total Users : {userCount - 1}</h1>
@@ -311,7 +315,7 @@ function Admin() {
 
                             {/* iterating the users to table row */}
                             {
-                               blogs && blogs.map((e) => {
+                                blogs && blogs.map((e) => {
                                     return <tr key={Math.random()} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                                         <td className="px-6 py-4">{e.blog_id}</td>
                                         <td className="px-6 py-4">{e.title.slice(0, 20)}</td>

@@ -2,7 +2,7 @@ import React from 'react'
 
 function Footer() {
     return (
-        <footer className="bg-white dark:bg-gray-900">
+        <footer className="bg-white dark:bg-gray-900 mt-5">
             <div className="mx-auto w-full max-w-screen-xl p-4 py-6 lg:py-8">
                 <div className="md:flex md:justify-between">
                     <div className="mb-6 md:mb-0">
@@ -18,7 +18,7 @@ function Footer() {
                             </h2>
                             <ul className="text-gray-500 dark:text-gray-400 font-medium">
                                 <li className="mb-4">
-                                    <a href="" className="hover:underline">
+                                    <a href="https://github.com/Sandeep-Petwal" target='_blank'  className="hover:underline">
                                         Blogify
                                     </a>
                                 </li>
@@ -32,7 +32,7 @@ function Footer() {
                             <ul className="text-gray-500 dark:text-gray-400 font-medium">
                                 <li className="mb-4">
                                     <a
-                                        href=""
+                                        href="https://github.com/Sandeep-Petwal" target='_blank'
                                         className="hover:underline "
                                     >
                                         Github
@@ -41,33 +41,20 @@ function Footer() {
                              
                             </ul>
                         </div>
-                        <div>
-                            <h2 className="mb-6 text-sm font-semibold text-gray-900 uppercase dark:text-white">
-                                Legal
-                            </h2>
-                            <ul className="text-gray-500 dark:text-gray-400 font-medium">
-                                <li className="mb-4">
-                                    <a href="#" className="hover:underline">
-                                        Privacy Policy
-                                    </a>
-                                </li>
-                               
-                            </ul>
-                        </div>
                     </div>
                 </div>
                 <hr className="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8" />
                 <div className="sm:flex sm:items-center sm:justify-between">
                     <span className="text-sm text-gray-500 sm:text-center dark:text-gray-400">
                         © 2024{" "}
-                        <a href="" className="hover:underline">
+                        <a href="https://github.com/Sandeep-Petwal" target='_blank' className="hover:underline">
                             Blogify™
                         </a>
                         . All Rights Reserved.
                     </span>
                     <div className="flex mt-4 sm:justify-center sm:mt-0">
                         <a
-                            href="#"
+                            href="https://github.com/Sandeep-Petwal" target='_blank'
                             className="text-gray-500 hover:text-gray-900 dark:hover:text-white"
                         >
                             <svg
@@ -101,7 +88,7 @@ function Footer() {
                             <span className="sr-only">Discord community</span>
                         </a>
                         <a
-                            href="#"
+                            href="https://github.com/Sandeep-Petwal" target='_blank'
                             className="text-gray-500 hover:text-gray-900 dark:hover:text-white ms-5"
                         >
                             <svg
