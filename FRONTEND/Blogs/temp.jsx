@@ -819,3 +819,52 @@ function Profile() {
 }
 
 export default Profile
+
+
+//  ______________________________________________________________________________________________
+// Follow syste m 
+{user.isLoggedIn && <div className="mt-4 flex justify-center items-center flex-col gap-2 space-x-4">
+<button
+    className=" flex justify-center gap-3 items-center px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600 transition">
+    <FaUserPlus />
+    Follow
+</button>
+<button
+    className=" flex justify-center gap-3 items-center px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600 transition">
+    <FaUserClock />
+    Pending...
+</button>
+<button
+    className=" flex justify-center gap-3 items-center px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600 transition">
+    <FaUserCheck />
+    Following
+</button>
+
+
+
+
+
+{/* followers tab  */}
+<div className="text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:text-gray-400 dark:border-gray-700">
+    <ul className="flex flex-wrap -mb-px">
+        <li className="me-2">
+            <div
+                href="#"
+                className={`inline-block p-4  ${activeTab == "followers" ? 'text-blue-600 border-b-2 border-blue-600' : 'hover:text-gray-600 hover:border-gray-300'}  border-b-2 border-transparent rounded-t-lg  cursor-pointer`}
+            >
+                Followers
+            </div>
+        </li>
+        <li className="me-2">
+            <div
+                href="#"
+                className={`inline-block p-4  ${activeTab == "following" ? 'text-blue-600 border-b-2 border-blue-600' : 'hover:text-gray-600 hover:border-gray-300'}  border-b-2 border-transparent rounded-t-lg cursor-pointer `}
+                aria-current="page"
+            >
+                Following
+            </div>
+        </li>
+    </ul>
+</div>
+</div>}
+

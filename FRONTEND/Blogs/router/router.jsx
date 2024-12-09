@@ -11,6 +11,7 @@ import Profile from "../src/pages/Profile";
 import Admin from "../src/pages/Admin";
 import ForgetPassword from "../src/pages/ForgetPassword";
 import PublicProfile from "../src/pages/PublicProfile";
+import Chat from "../src/pages/Chat";
 
 const router = createBrowserRouter([
     {
@@ -38,8 +39,8 @@ const router = createBrowserRouter([
                 element: <Profile />,
             },
             {
-                path : "/profile/:user_id",   // public profile of user
-                element : <PublicProfile />
+                path: "/profile/:user_id",   // public profile of user
+                element: <PublicProfile />
             },
             {
                 path: "/admin",
@@ -48,6 +49,18 @@ const router = createBrowserRouter([
             {
                 path: "/reset",
                 element: <ForgetPassword />,
+            },
+            {
+                path: "/chat/:user_params",
+                element: <Chat />
+            },
+            {
+                path: "/chat",
+                element: <Chat />
+            },
+            {
+                path: "/404",
+                element: <Notfound />
             },
             {
                 path: "*",

@@ -2,6 +2,7 @@ const Blogs = require('./blogsModel');
 const Users = require('./userModel');
 const Tempusers = require('./tempUserModel');
 const Templates = require('./emailTemplatesModel');
+const Messages = require("./messagesModel")
 
 
 
@@ -21,4 +22,4 @@ Blogs.belongsTo(Users, {
 })
 
 
-module.exports = { Blogs, Users, Templates, Tempusers }
+module.exports = { Blogs, Users, Templates, Tempusers, Messages }

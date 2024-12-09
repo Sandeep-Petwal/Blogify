@@ -32,7 +32,7 @@ const upload = multer({
     fileFilter: imageFileFilter
 });
 router.put("/user/:user_id", auth.authentication, upload.single('profile_pic'), userController.updateUser); // update user profile
-module.exports = router
+router.get("/user/all", userController.getAllUsers);
 
 
 
@@ -41,3 +41,4 @@ router.get("/", (req, res) => {
     const response = require("../util/response.js")
     return response.success(res, "This the api route")
 })
+module.exports = router

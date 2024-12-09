@@ -48,6 +48,10 @@ const Users = sequelize.define("Users", {
     otp: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
+    },
+    online: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
     }
 }, {
     timestamps: true,

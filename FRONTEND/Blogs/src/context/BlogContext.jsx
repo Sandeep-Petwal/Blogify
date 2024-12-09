@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { createContext } from "react";
 export const BlogContext = createContext();
 import { useState } from "react";
@@ -69,7 +70,7 @@ export const BlogContextProvider = ({ children }) => {
 
 
     const refreshUserDetail = async (token) => {
-        verifyUser();
+        verifyUser(token);
     }
 
     return (

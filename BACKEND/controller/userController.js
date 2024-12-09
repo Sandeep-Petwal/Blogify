@@ -34,6 +34,20 @@ exports.verifyUser = async (req, res) => {
     }
 };
 
+// get all users for chat
+exports.getAllUsers = async (req, res) => {
+    const users = await Users.findAll({
+        limit: 10,
+        attributes: {
+            exclude: ['otp', 'password', 'role', ]
+        }
+    });
+    if (users.length > 0) {
+        return res.json({ data: users })
+    }
+    res.json({ message: "No users found", users: [] })
+}
+
 
 // user login 
 exports.logIn = async (req, res) => {
@@ -121,7 +135,7 @@ exports.updateUser = async (req, res) => {
     //  if no fields are provided and no file uploaded
     const fieldsProvided = [name, email, bio, password].some(field => field);
     if (!fieldsProvided && !req.file) {
-        return response.failed(res,"No field is provided to update !" , "No field is provided to update !"  )
+        return response.failed(res, "No field is provided to update !", "No field is provided to update !")
     }
 
     let hashedPassword;
@@ -193,7 +207,7 @@ exports.deleteUser = async (req, res) => {
         if (affectedRows === 0) {
             return response.failed(res, "No user found to delete", "No user found to delete");
         }
-        return response.success(res,"User and associated blogs deleted successfully" )
+        return response.success(res, "User and associated blogs deleted successfully")
     } catch (error) {
         console.error("Error deleting the user: ", error);
         return response.serverError(res);

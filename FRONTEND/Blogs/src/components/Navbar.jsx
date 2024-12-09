@@ -3,8 +3,8 @@ import { BlogContext } from '../context/BlogContext';
 import { RiAdminLine } from "react-icons/ri";
 import { FaEdit, FaSignOutAlt, FaHome } from 'react-icons/fa';
 import { FaRegCircleUser } from "react-icons/fa6";
+import { IoChatbubbleEllipsesSharp } from "react-icons/io5";
 
-import { FaRegTrashAlt } from "react-icons/fa";
 import { FaUserPlus } from "react-icons/fa6";
 import { HiOutlineLogin } from "react-icons/hi";
 
@@ -95,6 +95,21 @@ function Navbar() {
                                     >
                                         <FaRegCircleUser />
                                         Profile
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink
+                                        to={"/chat"}
+                                        className={({ isActive }) =>
+                                            `flex justify-center hover:text-orange-500 items-center gap-2 py-2 px-3   rounded md:bg-transparent  md:p-0 
+                                          ${isActive ? 'text-orange-600 bg-gray-600 font-bold' : 'text-white'}`
+                                        }
+
+                                        // className=" flex justify-center hover:text-orange-500 items-center gap-2 py-2 px-3 text-white  rounded md:bg-transparent  md:p-0 dark:text-white "
+                                        aria-current="page"
+                                    >
+                                        <IoChatbubbleEllipsesSharp />
+                                        Chat
                                     </NavLink>
                                 </li>
                                 {user.role == "admin" && <li>

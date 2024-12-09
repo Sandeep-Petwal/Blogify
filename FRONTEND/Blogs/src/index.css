@@ -2,6 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
+/* For webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  /* Width of the scrollbar */
+  height: 8px;
+  /* Height of the scrollbar (for horizontal scrollbar) */
+}
+
+::-webkit-scrollbar-track {
+  background: #2c2c2c;
+  /* Background of the track */
+  border-radius: 10px;
+  /* Rounded corners for the track */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4a4a4a;
+  /* Color of the scrollbar thumb */
+  border-radius: 10px;
+  /* Rounded corners for the thumb */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6b6b6b;
+  /* Color of the thumb on hover */
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #888888;
+  /* Color of the thumb when active */
+}
 
 /* :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
